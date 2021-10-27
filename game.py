@@ -39,7 +39,10 @@ class Square(pygame.sprite.Sprite):
     def set_flash(self):
         self.flashed = True
         self.image.fill(LIGHTBLUE)
-
+    
+    def reset(self):
+        self.flashed = False
+        self.image.fill(BLUE)
     def draw(self):
 
 
@@ -98,6 +101,23 @@ class Game:
         
 
     
+    def _check_if_high_score_and_write(self,score):
+
+
+        with open("high_scores.txt",'r') as f:
+            scores = list(map(int,f.readlines()))
+
+
+        if score > scores[-1]:
+            scores.pop()
+            scores.append(score)
+
+        scores.sort()
+
+
+        with open("high_scores.txt",'w') as f:
+            for score in scores:
+                f.write(f"{score}\n")
 
 
     
@@ -172,12 +192,24 @@ class Game:
                 self.game_over = True
                 self.grid[self.flash_row][self.flash_col].set_red()
                 self.BUZZER_SOUND.play()
+                self._check_if_high_score_and_write(self.score)
 
 
         return False
 
 
+    
+    def _reset_board(self):
 
+
+        for square in self.squares:
+            if square.flashed:
+                square.reset()
+
+        self.score = 0
+        self.score_text = self.FONT.render("0",True,WHITE)
+        self._start_timer()
+        self._set_new_square_flash()
 
     def _play(self):
         
@@ -198,6 +230,15 @@ class Game:
                         self.score += 1
                         self.score_text = self.FONT.render(f"{self.score}",True,WHITE)
                         self._set_new_square_flash()
+                if self.game_over and event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        self._reset_board()
+
+
+
+
+
+
 
              
             screen.fill(BLACK)
