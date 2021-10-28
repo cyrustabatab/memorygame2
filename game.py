@@ -77,9 +77,24 @@ class Game:
         self.score_text = self.FONT.render("0",True,WHITE)
         self.board_width = size *cols
         self.board_height = size * rows
-        self.game_over = False
+        self.game_over = True
+        self.enter_text = self.FONT.render("Hit Enter to Play Again",True,WHITE)
+        self.enter_text_rect = self.enter_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.enter_text.get_height()//2))
+        self.first_time = True
+        self.first_time_text = self.FONT.render("Hit Enter to PLAY!",True,WHITE)
+        self.first_time_rect = self.first_time_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.first_time_text.get_height()//2))
+        
+
+        self.game_end_transparent_background = pygame.Surface((self.board_width,self.board_height),flags=pygame.SRCALPHA)
+        self.game_end_transparent_background.fill((255,255,255,100))
+        
 
         
+        text = self.FONT.render("GAME OVER",True,RED)
+        text_rect = text.get_rect(center=(self.game_end_transparent_background.get_width()//2,self.game_end_transparent_background.get_height()//2))
+        self.game_end_transparent_background.blit(text,text_rect)
+        
+
         self.squares = pygame.sprite.Group()
         self.click_text = self.FONT.render("Click on New Square Added",True,WHITE)
         self.click_text_rect = self.click_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.click_text.get_height()//2))
@@ -157,6 +172,7 @@ class Game:
             screen.fill(BLACK)
             self._draw_board()
             screen.blit(current_text,(SCREEN_WIDTH//2 - current_text.get_width()//2,0))
+            screen.blit(self.score_text,(0,0))
             pygame.display.update()
 
     
@@ -210,11 +226,10 @@ class Game:
         self.score_text = self.FONT.render("0",True,WHITE)
         self._start_timer()
         self._set_new_square_flash()
+        self.game_over = False
 
     def _play(self):
         
-        self._start_timer()
-        self._set_new_square_flash()
 
         while True:
 
@@ -222,7 +237,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if not self.game_over and event.type == pygame.MOUSEBUTTONDOWN:
                     x,y = pygame.mouse.get_pos()
 
                     guessed_correct = self._check_row_and_column_pressed(x,y)
@@ -230,9 +245,15 @@ class Game:
                         self.score += 1
                         self.score_text = self.FONT.render(f"{self.score}",True,WHITE)
                         self._set_new_square_flash()
-                if self.game_over and event.type == pygame.KEYDOWN:
+                if  event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        self._reset_board()
+                        if self.game_over:
+                            self._reset_board()
+                        elif self.first_time:
+                            self.first_time = False
+                            self.game_over = False
+                            self._start_timer()
+                            self._set_new_square_flash()
 
 
 
@@ -244,7 +265,15 @@ class Game:
             screen.fill(BLACK)
             for square in self.squares:
                 square.draw()
-            screen.blit(self.click_text,self.click_text_rect)
+            if not self.game_over:
+                if not self.first_time:
+                    screen.blit(self.click_text,self.click_text_rect)
+                else:
+                    screen.blit(self.first_time_text,self.first_time_rect)
+            else:
+                if not self.first_time:
+                    screen.blit(self.game_end_transparent_background,(self.side_gap,self.top_gap))
+                screen.blit(self.enter_text,self.enter_text_rect)
             screen.blit(self.score_text,(0,0))
             pygame.display.update()
             clock.tick(FPS)
