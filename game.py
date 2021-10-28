@@ -247,13 +247,13 @@ class Game:
                         self._set_new_square_flash()
                 if  event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        if self.game_over:
-                            self._reset_board()
-                        elif self.first_time:
+                        if self.first_time:
                             self.first_time = False
                             self.game_over = False
                             self._start_timer()
                             self._set_new_square_flash()
+                        elif self.game_over:
+                            self._reset_board()
 
 
 
