@@ -65,6 +65,7 @@ class Game:
     FONT = pygame.font.SysFont("calibri",40,bold=True)
     START_SOUND = pygame.mixer.Sound("racestart.wav")
     BUZZER_SOUND = pygame.mixer.Sound("buzzer.ogg")
+    CLICK_SOUND = pygame.mixer.Sound("match1.wav")
     def __init__(self,rows=20,cols=20,size=25):
         self.rows = rows
         self.cols = cols
@@ -201,6 +202,7 @@ class Game:
             row_pressed,col_pressed = y // self.size,x//self.size
 
             if row_pressed == self.flash_row and col_pressed == self.flash_col:
+                self.CLICK_SOUND.play()
                 return True
             
             
@@ -268,12 +270,12 @@ class Game:
             if not self.game_over:
                 if not self.first_time:
                     screen.blit(self.click_text,self.click_text_rect)
-                else:
-                    screen.blit(self.first_time_text,self.first_time_rect)
             else:
                 if not self.first_time:
                     screen.blit(self.game_end_transparent_background,(self.side_gap,self.top_gap))
-                screen.blit(self.enter_text,self.enter_text_rect)
+                    screen.blit(self.enter_text,self.enter_text_rect)
+                else:
+                    screen.blit(self.first_time_text,self.first_time_rect)
             screen.blit(self.score_text,(0,0))
             pygame.display.update()
             clock.tick(FPS)
