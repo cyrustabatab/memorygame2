@@ -67,10 +67,13 @@ class Game:
     START_SOUND = pygame.mixer.Sound("racestart.wav")
     BUZZER_SOUND = pygame.mixer.Sound("buzzer.ogg")
     CLICK_SOUND = pygame.mixer.Sound("match1.wav")
+    MUSIC_FILE = "music.ogg"
     def __init__(self,rows=20,cols=20,size=25,high_score_file="high_score.txt"):
         self.rows = rows
         self.cols = cols
         self.high_score_file = high_score_file
+        pygame.mixer.music.load(self.MUSIC_FILE)
+        pygame.mixer.music.play(-1)
 
 
 
@@ -214,6 +217,7 @@ class Game:
             
             
             if self.grid[row_pressed][col_pressed].flashed == True:
+                pygame.mixer.music.pause()
                 self.game_over = True
                 self.grid[self.flash_row][self.flash_col].set_red()
                 self.BUZZER_SOUND.play()
@@ -279,6 +283,7 @@ class Game:
                             self._start_timer()
                             self._set_new_square_flash()
                         elif self.game_over:
+                            pygame.mixer.music.play(-1)
                             self._reset_board()
 
 
