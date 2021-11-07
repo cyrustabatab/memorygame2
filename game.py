@@ -59,6 +59,7 @@ class Square(pygame.sprite.Sprite):
 
 
 
+
 class Game:
     
     
@@ -95,10 +96,10 @@ class Game:
         text_rect = text.get_rect(center=(self.game_end_transparent_background.get_width()//2,self.game_end_transparent_background.get_height()//2))
         self.game_end_transparent_background.blit(text,text_rect)
         
+        
 
         self.squares = pygame.sprite.Group()
-        self.click_text = self.FONT.render("Click on New Square Added",True,WHITE)
-        self.click_text_rect = self.click_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.click_text.get_height()//2))
+        self._set_click_text()
 
 
         
@@ -114,7 +115,11 @@ class Game:
             self.grid.append(new_row)
 
         
-        
+    def _set_click_text(self): 
+        self.click_text = self.FONT.render("Click on New Square Added",True,WHITE)
+        self.click_text_rect = self.click_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.click_text.get_height()//2))
+
+
 
     
     def _check_if_high_score_and_write(self,score):
@@ -229,7 +234,24 @@ class Game:
         self._start_timer()
         self._set_new_square_flash()
         self.game_over = False
-
+    
+    def _draw(self):
+        screen.fill(BLACK)
+        for square in self.squares:
+            square.draw()
+        if not self.game_over:
+            if not self.first_time:
+                screen.blit(self.click_text,self.click_text_rect)
+        else:
+            if not self.first_time:
+                screen.blit(self.game_end_transparent_background,(self.side_gap,self.top_gap))
+                screen.blit(self.enter_text,self.enter_text_rect)
+            else:
+                screen.blit(self.first_time_text,self.first_time_rect)
+        screen.blit(self.score_text,(0,0))
+        pygame.display.update()
+        clock.tick(FPS)
+    
     def _play(self):
         
 
@@ -284,7 +306,51 @@ class Game:
     def __call__(self):
         self._play()
 
+class Game2(Game):
 
+    
+    def _set_click_text(self):
+        self.click_text = self.FONT.render("Click on New Square Added",True,WHITE)
+        self.click_text_rect = self.click_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.click_text.get_height()//2))
+
+    def _flash_square(self,row,col): 
+        self.grid[row][col].set_flash()
+
+    
+
+
+
+    def _set_new_square_flash(self):
+        row,col = random.randint(0,self.rows - 1),random.randint(0,self.cols -1)
+        
+
+        def flashes_helper(row,col,length):
+            
+            self._flash_square(row,col)
+
+            if length == 0:
+                return True
+            if random.randint(1,2) == 1:
+                return False
+
+            for row_diff in (-1,0,1):
+                for col_diff in (-1,0,1):
+                    if row_diff ==0 and col_diff == 0:
+                        continue
+
+                    new_row =row + row_diff
+                    new_col = col + col_diff
+
+                    if self.grid[new_row][new_col].flashed == False:
+                        result = flashes_helper(new_row,new_col,length -1)
+                        if result:
+                            return True
+
+            return False
+
+        length = 3
+        flashes_helper(row,col,length)
+        
 
 game = Game()
 
