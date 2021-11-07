@@ -67,9 +67,11 @@ class Game:
     START_SOUND = pygame.mixer.Sound("racestart.wav")
     BUZZER_SOUND = pygame.mixer.Sound("buzzer.ogg")
     CLICK_SOUND = pygame.mixer.Sound("match1.wav")
-    def __init__(self,rows=20,cols=20,size=25):
+    def __init__(self,rows=20,cols=20,size=25,high_score_file="high_score.txt"):
         self.rows = rows
         self.cols = cols
+        self.high_score_file = high_score_file
+
 
 
         self.size = size
