@@ -55,9 +55,45 @@ class Square(pygame.sprite.Sprite):
 
 
 
+class Menu:
+
+    MENU_FONT = pygame.font.SysFont("calibri",40)
+    def __init__(self):
+
+        self.title_text = self.MENU_FONT.render("MEMORY CLASH",True,BLUE)
+        self.title_text_rect = self.title_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.title_text.get_height()//2))
+        self._start()
+
+
+    def _start(self):
+
+
+        while True:
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type  ==pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        game = Game()
+                        game()
+                    elif event.key == pygame.K_2:
+                        game = Game2()
+                        game()
 
 
 
+
+            
+
+            screen.fill(BLACK)
+            screen.blit(self.title_text,self.title_text_rect)
+            pygame.display.update()
+
+
+    def __call__(self):
+        self._start()
 
 
 class Game:
@@ -314,6 +350,16 @@ class Game:
         self._play()
 
 class Game2(Game):
+    
+
+    def __init__(self):
+        super().__init__()
+
+        self.length = 3
+        self.flashed_squares = set()
+        self.correct_squares_clicked = 0
+        self.look_text = self.FONT.render("Please Look Carefully",True,WHITE)
+        self.look_text_rect = self.look_text.get_rect(center=(SCREEN_WIDTH//2,10 + self.look_text.get_height()//2))
 
     
     def _set_click_text(self):
@@ -322,6 +368,7 @@ class Game2(Game):
 
     def _flash_square(self,row,col): 
         self.grid[row][col].set_flash()
+        self.flashed_squares.add(self.grid[row][col])
 
     
 
@@ -330,16 +377,18 @@ class Game2(Game):
     def _set_new_square_flash(self):
         row,col = random.randint(0,self.rows - 1),random.randint(0,self.cols -1)
         
-
+        
         def flashes_helper(row,col,length):
             
             self._flash_square(row,col)
 
             if length == 0:
-                return True
+                return True,None
             if random.randint(1,2) == 1:
-                return False
+                return False,length
 
+            
+            
             for row_diff in (-1,0,1):
                 for col_diff in (-1,0,1):
                     if row_diff ==0 and col_diff == 0:
@@ -348,20 +397,137 @@ class Game2(Game):
                     new_row =row + row_diff
                     new_col = col + col_diff
 
-                    if self.grid[new_row][new_col].flashed == False:
-                        result = flashes_helper(new_row,new_col,length -1)
+                    if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.grid[new_row][new_col].flashed == False:
+                        result,length= flashes_helper(new_row,new_col,length - 1)
                         if result:
-                            return True
+                            return True,None
 
-            return False
+            return False,length
 
-        length = 3
-        flashes_helper(row,col,length)
         
 
-game = Game()
+        length = self.length
+        for row_diff in (-1,0,1):
+            for col_diff in (-1,0,1):
+                if row_diff ==0 and col_diff == 0:
+                    continue
 
-game()
+                new_row =row + row_diff
+                new_col = col + col_diff
+
+                if 0 <= new_row < self.rows and 0 <= new_col < self.cols and self.grid[new_row][new_col].flashed == False:
+                    result,length= flashes_helper(new_row,new_col,length-1)
+                    if result:
+                        return 
+    
+    
+    def _get_neighbors(self,row,col):
+        neighbors = []
+        for row_diff in (-1,0,1):
+            for col_diff in (-1,0,1):
+                if row_diff ==0 and col_diff == 0:
+                    continue
+
+                new_row =row + row_diff
+                new_col = col + col_diff
+
+                if 0 <= new_row < self.rows and 0 <= new_col < self.cols:
+                    neighbors.append((new_row,new_col))
+
+        return neighbors
+
+    def _unflash_squares(self): 
+        for square in self.flashed_squares:
+            square.reset()
+
+    def _display_for_three_seconds(self):
+
+
+        SECOND_EVENT = pygame.USEREVENT + 5
+        seconds = 3
+        pygame.time.set_timer(SECOND_EVENT,1000)
+
+        
+        screen.fill(BLACK)
+        screen.blit(self.look_text,self.look_text_rect)
+        self._draw_board()
+        pygame.display.update()
+        while True:
+
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == SECOND_EVENT:
+                    seconds -= 1
+                    if seconds == 0:
+                        pygame.time.set_timer(SECOND_EVENT,0)
+                        self._unflash_squares()
+                        return
+
+
+
+            
+
+
+
+
+        
+    def _play(self):
+        
+
+        while True:
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if not self.game_over and event.type == pygame.MOUSEBUTTONDOWN:
+                    x,y = pygame.mouse.get_pos()
+
+                    guessed_correct = self._check_row_and_column_pressed(x,y)
+                    if guessed_correct:
+                        self.score += 1
+                        self.score_text = self.FONT.render(f"{self.score}",True,WHITE)
+                        self._set_new_square_flash()
+                if  event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        if self.first_time:
+                            self.first_time = False
+                            self.game_over = False
+                            self._start_timer()
+                            self._set_new_square_flash()
+                            self._display_for_three_seconds()
+                        elif self.game_over:
+                            pygame.mixer.music.play(-1)
+                            self._reset_board()
+
+
+
+
+
+
+
+             
+            screen.fill(BLACK)
+            self._draw_board()
+            if not self.game_over:
+                if not self.first_time:
+                    screen.blit(self.click_text,self.click_text_rect)
+            else:
+                if not self.first_time:
+                    screen.blit(self.game_end_transparent_background,(self.side_gap,self.top_gap))
+                    screen.blit(self.enter_text,self.enter_text_rect)
+                else:
+                    screen.blit(self.first_time_text,self.first_time_rect)
+            screen.blit(self.score_text,(0,0))
+            pygame.display.update()
+            clock.tick(FPS)
+
+game = Menu()
+
+menu()
 
 
 
