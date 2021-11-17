@@ -355,7 +355,7 @@ class Game2(Game):
     def __init__(self):
         super().__init__()
 
-        self.length = 3
+        self.length = self.count = 3
         self.flashed_squares = set()
         self.correct_squares_clicked = 0
         self.look_text = self.FONT.render("Please Look Carefully",True,WHITE)
@@ -470,6 +470,27 @@ class Game2(Game):
 
             
 
+    def _check_row_and_column_pressed(self,x,y):
+
+
+        if self.side_gap < x < self.side_gap + self.board_width  and self.top_gap < y < self.top_gap + self.board_height:
+
+
+            x -= self.side_gap
+            y -= self.top_gap
+
+            row,col = y // self.size,x // self.size
+
+
+            square = self.grid[row][col] 
+
+
+            if square not in self.flashed_squares:
+                print('incorrect')
+            else:
+                self.count -= 1
+                square.set_flash()
+                print('correct')
 
 
 
